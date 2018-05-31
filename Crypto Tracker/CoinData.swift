@@ -22,6 +22,21 @@ class CoinDate {
         }
     }
     
+    func html() -> String {
+        var html = "<h1>My Crypto Report</h1>"
+        html += "<h2>Net Worth: \(netWorthAsString())</h2>"
+        html += "<ul>"
+        for coin in coins {
+            if coin.amount != 0.0 {
+                html += "<li>\(coin.symbol) I own: \(coin.amount) - Valued at: \(doubleToMoneyString(double: coin.amount * coin.price))</li>"
+            }
+        }
+        
+        html += "</ul>"
+        
+        return html
+    }
+    
     func netWorthAsString() -> String {
         var netWorth = 0.0
         for coin in coins {
@@ -46,6 +61,7 @@ class CoinDate {
                     if let coinJSON = json[coin.symbol] as? [String:Double]{
                         if let price = coinJSON["USD"] {
                             coin.price = price
+                            UserDefaults.standard.set(price, forKey: coin.symbol)
                         }
                     }
                 }
@@ -85,6 +101,11 @@ class Coin {
         if let image = UIImage(named: symbol) {
             self.image = image
         }
+        self.price = UserDefaults.standard.double(forKey: symbol)
+        self.amount = UserDefaults.standard.double(forKey: symbol + "amount")
+        if let history = UserDefaults.standard.array(forKey: symbol + "history") as? [Double]{
+            self.historicalDate = history
+        }
     }
     
     func getHistoricalData() {
@@ -100,6 +121,7 @@ class Coin {
                         }
                     }
                     CoinDate.shared.delegate?.newHistory!()
+                    UserDefaults.standard.set(self.historicalDate, forKey: self.symbol + "history")
                     
                 }
             }
